@@ -5,26 +5,22 @@ containers:
 - name: redis
   image: "bitnami/redis:3.2.8-r1"
   imagePullPolicy: "IfNotPresent"
+  envFrom:
+  - secretRef:
+      name: redis
   env:
   - name: REDIS_PASSWORD
     valueFrom:
       secretKeyRef:
         name: redis
         key: redis-password
-  livenessProbe:
+  health:
     exec:
       command:
       - redis-cli
       - ping
     initialDelaySeconds: 30
     timeoutSeconds: 5
-  readinessProbe:
-    exec:
-      command:
-      - redis-cli
-      - ping
-    initialDelaySeconds: 5
-    timeoutSeconds: 1
   resources:
     requests:
       cpu: 100m
@@ -35,20 +31,13 @@ containers:
 
 services:
 - name: redis
-  labels:
-    app: redis
-  ports:
-  - name: redis
-    port: 6379
-    targetPort: 6379
+  portMappings:
+  - 6379:6379/TCP
 
 volumeClaims:
 - name: redis-data
   size: 10Gi
 
 secrets:
-- name: redis
-  labels:
-    app: redis
-  data:
-   redis-password: "Z2l0bGFi"
+- data:
+    REDIS_PASSWORD: "Z2l0bGFi"
