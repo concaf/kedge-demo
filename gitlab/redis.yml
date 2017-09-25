@@ -8,12 +8,6 @@ containers:
   envFrom:
   - secretRef:
       name: redis
-  env:
-  - name: REDIS_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: redis
-        key: redis-password
   health:
     exec:
       command:
