@@ -5,67 +5,30 @@ replicas: 1
 containers:
 - name: gitlab
   image: gitlab/gitlab-ce:9.4.1-ce.0
-  imagePullPolicy: ""
+  envFrom:
+  - configMapRef:
+      name: gitlab
+  - secretRef:
+      name: gitlab
   env:
-  ## General GitLab Configs
-  ##
-  # This is a free-form env var that GitLab Omnibus uses to configure
-  # everything. We're passing this in from a configmap and pulling some
-  # of the values from the env vars defined below. This is done to
-  # avoid leaving secrets visible in kubectl.
-  - name: GITLAB_OMNIBUS_CONFIG
-    valueFrom:
-      configMapKeyRef:
-        name: gitlab
-        key: gitlab_omnibus_config
   - name: GITLAB_ROOT_PASSWORD
   - name: EXTERNAL_URL
     value: "http://your-domain.com/"
-  ## DB configuration
-  ##
   - name: DB_HOST
     value: postgresql
-  - name: DB_USER
-    valueFrom:
-      secretKeyRef:
-        name: gitlab
-        key: db-user
-  - name: DB_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: gitlab
-        key: db-password
   - name: DB_DATABASE
     value: "gitlab"
-  ## Redis configuration
-  ##
   - name: REDIS_HOST
     value: redis
-  - name: REDIS_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: gitlab
-        key: redis-password
-  livenessProbe:
+  health:
     httpGet:
       path: /help
       port: 80
-    # This pod takes a very long time to start up. Be cautious when
-    # lowering this value to avoid Pod death during startup.
     initialDelaySeconds: 200
     timeoutSeconds: 1
     periodSeconds: 10
     successThreshold: 1
     failureThreshold: 10
-  readinessProbe:
-    httpGet:
-      path: /help
-      port: 80
-    initialDelaySeconds: 30
-    timeoutSeconds: 1
-    periodSeconds: 10
-    successThreshold: 1
-    failureThreshold: 3
   volumeMounts:
   - name: gitlab-etc
     mountPath: /etc/gitlab
@@ -84,16 +47,10 @@ services:
   labels:
     app: gitlab
   type: LoadBalancer
-  ports:
-  - name: ssh
-    port: 22
-    targetPort: 22
-  - name: http
-    port: 80
-    targetPort: 80
-  - name: https
-    port: 443
-    targetPort: 443
+  portMappings:
+  - 22:22
+  - 80:80
+  - 443:443
 
 volumeClaims:
 - name: gitlab-data
@@ -103,16 +60,13 @@ volumeClaims:
 
 secrets:
 - data:
-   db-user: "Z2l0bGFi"
-   db-password: "Z2l0bGFi"
-   redis-password: "Z2l0bGFi"
+   DB_USER: "Z2l0bGFi"
+   DB_PASSWORD: "Z2l0bGFi"
+   REDIS_PASSWORD: "Z2l0bGFi"
 
 configMaps:
 - data:
-  ## This is used by GitLab Omnibus as the primary means of configuration.
-  ## ref: https://gitlab.com/gitlab-org/omnibus-gitlab/blob/master/files/gitlab-config-template/gitlab.rb.template
-  ##
-   gitlab_omnibus_config: |
+   GITLAB_OMNIBUS_CONFIG: |
     external_url ENV['EXTERNAL_URL'];
     root_pass = ENV['GITLAB_ROOT_PASSWORD'];
     gitlab_rails['initial_root_password'] = root_pass unless root_pass.to_s == '';
