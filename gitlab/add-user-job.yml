@@ -1,0 +1,5 @@
+controller: job
+name: adduser
+containers:
+- image: containscafeine/python-gitlab-job-demo:latest
+restartPolicy: OnFailure
