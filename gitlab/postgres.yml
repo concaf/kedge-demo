@@ -4,25 +4,21 @@ labels:
 containers:
 - name: postgresql
   image: "postgres:9.6"
-  imagePullPolicy: ""
+  envFrom:
+  - secretRef:
+      name: postgresql
   env:
   - name: POSTGRES_USER
     value: "gitlab"
-    # Required for pg_isready in the health probes.
   - name: PGUSER
     value: "gitlab"
   - name: POSTGRES_DB
     value: "gitlab"
   - name: PGDATA
     value: /var/lib/postgresql/data/pgdata
-  - name: POSTGRES_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: postgresql
-        key: postgres-password
   - name: POD_IP
     valueFrom: { fieldRef: { fieldPath: status.podIP } }
-  livenessProbe:
+  health:
     exec:
       command:
       - sh
@@ -31,15 +27,6 @@ containers:
     initialDelaySeconds: 60
     timeoutSeconds: 5
     failureThreshold: 6
-  readinessProbe:
-    exec:
-      command:
-      - sh
-      - -c
-      - exec pg_isready --host $POD_IP
-    initialDelaySeconds: 5
-    timeoutSeconds: 3
-    periodSeconds: 5
   resources:
     requests:
       cpu: 100m
@@ -52,12 +39,8 @@ containers:
    
 services:
 - name: postgresql
-  labels:
-    app: postgresql
-  ports:
-  - name: postgresql
-    port: 5432
-    targetPort: 5432
+  portMappings:
+  - 5432:5432
 
 volumeClaims:
 - name: data
@@ -65,7 +48,5 @@ volumeClaims:
 
 secrets:
 - name: postgresql
-  labels:
-    app: postgresql
   data:
-   postgres-password:  "Z2l0bGFi"
+   POSTGRES_PASSWORD:  "Z2l0bGFi"
