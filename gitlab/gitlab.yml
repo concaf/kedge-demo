@@ -49,8 +49,11 @@ services:
   type: LoadBalancer
   portMappings:
   - 22:22
-  - 80:80
   - 443:443
+  ports:
+  - port: 80
+    targetPort: 80
+    endpoint: gitlab.192.168.42.231.nip.io
 
 volumeClaims:
 - name: gitlab-data
