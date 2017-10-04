@@ -1,29 +1,15 @@
 Gitlab Example
 --------------
 
-### [Example Reference](https://github.com/kubernetes/charts/tree/master/stable/gitlab-ce)
-
 ### Generating artifacts
 
 ```
-$ kedge generate -f gitlab.yml -f redis.yml -f postgres.yml
----
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  creationTimestamp: null
-  labels:
-    app: gitlab
-  name: gitlab
-spec:
-  strategy: {}
-...
-...
+$ kedge generate -f gitlab/
 ```
 
 ### Deploying on Kubernetes
 ```
-$ kedge create -f gitlab.yml -f redis.yml -f postgres.yml 
+$ kedge create -f gitlab/
 persistentvolumeclaim "gitlab-data" created
 persistentvolumeclaim "gitlab-etc" created
 service "gitlab" created
@@ -56,5 +42,3 @@ kubernetes   10.0.0.1     <none>        443/TCP                       6h
 postgresql   10.0.0.203   <none>        5432/TCP                      18m
 redis        10.0.0.124   <none>        6379/TCP                      18m
 ```
-
-Once it's exposed to external IP, visit the IP at `http://<EXTERNAL-IP:<PORT>`, you should see a webpage with gitlab login page. 
